@@ -10,7 +10,7 @@ public class Chat implements javax.jms.MessageListener {
     private String username;
 
     /* Constructor used to Initialize Chat */
-    public Chat(String topicFactory, String topicName, String username)
+    public Chat(String username)
             throws Exception {
 
         // Obtain a JNDI connection using the jndi.properties file
@@ -18,7 +18,7 @@ public class Chat implements javax.jms.MessageListener {
 
         // Look up a JMS connection factory and create the connection
         TopicConnectionFactory conFactory =
-                (TopicConnectionFactory) ctx.lookup(topicFactory);
+                (TopicConnectionFactory) ctx.lookup("TopicCF");
         TopicConnection connection = conFactory.createTopicConnection();
 
         // Create two JMS session objects
@@ -28,7 +28,7 @@ public class Chat implements javax.jms.MessageListener {
                 false, Session.AUTO_ACKNOWLEDGE);
 
         // Look up a JMS topic
-        Topic chatTopic = (Topic) ctx.lookup(topicName);
+        Topic chatTopic = (Topic) ctx.lookup("ALL");
 
         // Create a JMS publisher and subscriber. The additional parameters
         // on the createSubscriber are a message selector (null) and a true
@@ -77,12 +77,12 @@ public class Chat implements javax.jms.MessageListener {
     /* Run the Chat Client */
     public static void main(String[] args) {
         try {
-            if (args.length != 3) {
-                System.out.println("Factory, Topic, or username missing");
+            if (args.length != 1) {
+                System.out.println("username missing");
             }
 
-            // args[0]=topicFactory; args[1]=topicName; args[2]=username
-            Chat chat = new Chat(args[0], args[1], args[2]);
+            // args[0]=topicFactory; args[1]=username
+            Chat chat = new Chat(args[0]);
 
             // Read from command line
             BufferedReader commandLine = new

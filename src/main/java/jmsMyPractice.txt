@@ -1,0 +1,58 @@
+-----CLASSPATH-----
+
+В xubuntu 14 используется в качестве командной оболочки bash
+Чтобы убедиться в этом можно в терминале выполнить
+$ echo $SHELL
+
+Установим постоянную переменную CLASSPATH в нашу командную оболочку bash
+Для этого нужно отредактировать файл
+~/.bashrc
+
+добавим в конце файла ~/.bashrc следующее
+
+CLASSPATH=/home/alexd/Projects/jms/target/classes
+CLASSPATH=/home/alexd/.m2/repository/org/apache/activemq/activemq-all/5.13.1/activemq-all-5.13.1.jar:$CLASSPATH
+export CLASSPATH
+
+Теперь можно открыть новое окно терминала и проверить значение переменной CLASSPATH
+
+$ echo $CLASSPATH
+
+p.s. Переменная CLASSPATH используется java чтобы искать по там прописанным путям классы и прочие ресурсы
+
+-----ActiveMQ-----
+
+Нам необходимо установить JMS брокера, будем использовать Apache ActiveMQ
+
+загружаем отсюда
+http://activemq.apache.org/activemq-5131-release.html
+
+файл
+apache-activemq-5.13.1-bin.tar.gz
+
+я этот архив распаковал в
+~/Programs/apache-activemq-5.13.1
+
+
+Чтобы запустить ActiveMQ идем в
+~/Programs/apache-activemq-5.13.1/bin/linux-x86-64/
+
+и выполняем
+./activemq console
+
+или
+./activemq start
+
+чтобы запустить как демона.
+
+в браузере
+http://localhost:8161/admin/
+
+login: admin
+password: admin
+
+-----------------------------------------
+
+Так как теперь у нас прописан в CLASSPATH путь до нашего jms чата, мы можем набрать в терминале
+
+java Chat TopicCF A
