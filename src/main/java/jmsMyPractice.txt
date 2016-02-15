@@ -10,8 +10,8 @@ $ echo $SHELL
 
 добавим в конце файла ~/.bashrc следующее
 
-CLASSPATH=/home/alexd/Projects/jms/target/classes
-CLASSPATH=/home/alexd/.m2/repository/org/apache/activemq/activemq-all/5.13.1/activemq-all-5.13.1.jar:$CLASSPATH
+CLASSPATH=~/lessons/jms/target/classes
+CLASSPATH=~/.m2/repository/org/apache/activemq/activemq-all/5.13.1/activemq-all-5.13.1.jar:$CLASSPATH
 export CLASSPATH
 
 Теперь можно открыть новое окно терминала и проверить значение переменной CLASSPATH
@@ -55,4 +55,4 @@ password: admin
 
 Так как теперь у нас прописан в CLASSPATH путь до нашего jms чата, мы можем набрать в терминале
 
-java Chat TopicCF A
+java Chat A
