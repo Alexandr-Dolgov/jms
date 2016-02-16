@@ -8,6 +8,7 @@ public class Chat implements javax.jms.MessageListener {
     private TopicPublisher publisher;
     private TopicConnection connection;
     private String username;
+    private long countMessages;
 
     /* Constructor used to Initialize Chat */
     public Chat(String username)
@@ -67,6 +68,7 @@ public class Chat implements javax.jms.MessageListener {
         TextMessage message = pubSession.createTextMessage();
         message.setText(username + ": " + text);
         publisher.publish(message);
+        countMessages++;
     }
 
     /* Close the JMS Connection */
