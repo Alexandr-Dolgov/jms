@@ -4,53 +4,49 @@ import javax.naming.*;
 
 public class Chat implements javax.jms.MessageListener {
 
-    private TopicSession pubSession;
-    private TopicPublisher publisher;
-    private TopicConnection connection;
+    private TopicSession topicPublisherSession;
+    private TopicPublisher topicPublisher;
+    private TopicConnection topicConnection;
     private String username;
-    private long countMessages;
+
+    private long quantityMessages;
 
     /* Constructor used to Initialize Chat */
     public Chat(String username)
             throws Exception {
 
-        // Obtain a JNDI connection using the jndi.properties file
+        // Obtain a JNDI topicConnection using the jndi.properties file
         InitialContext ctx = new InitialContext();
 
-        // Look up a JMS connection factory and create the connection
-        TopicConnectionFactory conFactory =
-                (TopicConnectionFactory) ctx.lookup("TopicCF");
-        TopicConnection connection = conFactory.createTopicConnection();
+        // Look up a JMS topicConnection factory and create the topicConnection
+        TopicConnectionFactory conFactory = (TopicConnectionFactory) ctx.lookup("TopicCF");
+        TopicConnection topicConnection = conFactory.createTopicConnection();
 
         // Create two JMS session objects
-        TopicSession pubSession = connection.createTopicSession(
-                false, Session.AUTO_ACKNOWLEDGE);
-        TopicSession subSession = connection.createTopicSession(
-                false, Session.AUTO_ACKNOWLEDGE);
+        TopicSession topicPublisherSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+        TopicSession topicSubscriberSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
 
         // Look up a JMS topic
         Topic chatTopic = (Topic) ctx.lookup("ALL");
 
-        // Create a JMS publisher and subscriber. The additional parameters
+        // Create a JMS topicPublisher and topicSubscriber. The additional parameters
         // on the createSubscriber are a message selector (null) and a true
         // value for the noLocal flag indicating that messages produced from
-        // this publisher should not be consumed by this publisher.
-        TopicPublisher publisher =
-                pubSession.createPublisher(chatTopic);
-        TopicSubscriber subscriber =
-                subSession.createSubscriber(chatTopic, null, true);
+        // this topicPublisher should not be consumed by this topicPublisher.
+        TopicPublisher topicPublisher = topicPublisherSession.createPublisher(chatTopic);
+        TopicSubscriber topicSubscriber = topicSubscriberSession.createSubscriber(chatTopic, null, true);
 
         // Set a JMS message listener
-        subscriber.setMessageListener(this);
+        topicSubscriber.setMessageListener(this);
 
         // Initialize the Chat application variables
-        this.connection = connection;
-        this.pubSession = pubSession;
-        this.publisher = publisher;
+        this.topicConnection = topicConnection;
+        this.topicPublisherSession = topicPublisherSession;
+        this.topicPublisher = topicPublisher;
         this.username = username;
 
-        // Start the JMS connection; allows messages to be delivered
-        connection.start();
+        // Start the JMS topicConnection; allows messages to be delivered
+        topicConnection.start();
     }
 
     /* Receive Messages From Topic Subscriber */
@@ -65,15 +61,15 @@ public class Chat implements javax.jms.MessageListener {
 
     /* Create and Send Message Using Publisher */
     protected void writeMessage(String text) throws JMSException {
-        TextMessage message = pubSession.createTextMessage();
+        quantityMessages++;
+        TextMessage message = topicPublisherSession.createTextMessage();
         message.setText(username + ": " + text);
-        publisher.publish(message);
-        countMessages++;
+        topicPublisher.publish(message);
     }
 
     /* Close the JMS Connection */
     public void close() throws JMSException {
-        connection.close();
+        topicConnection.close();
     }
 
     /* Run the Chat Client */
@@ -87,8 +83,7 @@ public class Chat implements javax.jms.MessageListener {
             Chat chat = new Chat(args[0]);
 
             // Read from command line
-            BufferedReader commandLine = new
-                    java.io.BufferedReader(new InputStreamReader(System.in));
+            BufferedReader commandLine = new BufferedReader(new InputStreamReader(System.in));
 
 
             // Loop until the word "exit" is typed
