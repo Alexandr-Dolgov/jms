@@ -5,6 +5,7 @@ import javax.naming.*;
 public class Chat implements javax.jms.MessageListener {
 
     private String username;
+    private Context context;
     private long quantityMessages;  //msgid
 
     private TopicSession topicPublisherSession;
@@ -12,10 +13,17 @@ public class Chat implements javax.jms.MessageListener {
     private TopicConnection topicConnection;
 
     private QueueConnection queueConnection;
-
+    private QueueSession queueSession;
 
     /* Constructor used to Initialize Chat */
     public Chat(String username) throws Exception {
+
+        /*
+        //todo
+        в файле jndi.properties ищем строчку
+        queue.$username = $username
+        если не находим, то добавляем в конец
+         */
 
         // Obtain a JNDI topicConnection using the jndi.properties file
         Context context = new InitialContext();
@@ -48,6 +56,7 @@ public class Chat implements javax.jms.MessageListener {
         this.topicPublisherSession = topicPublisherSession;
         this.topicPublisher = topicPublisher;
         this.username = username;
+        this.context = context;
 
         // Start the JMS topicConnection; allows messages to be delivered
         topicConnection.start();
@@ -58,9 +67,12 @@ public class Chat implements javax.jms.MessageListener {
         QueueConnection queueConnection = queueCF.createQueueConnection();
         QueueSession queueSession = queueConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        Queue requestQ = queueSession.createQueue(username);
+        Queue queue = (Queue) context.lookup(username);
+        QueueReceiver qReceiver = queueSession.createReceiver(queue);
+        qReceiver.setMessageListener(this);
 
         this.queueConnection = queueConnection;
+        this.queueSession = queueSession;
 
         queueConnection.start();
 
@@ -84,7 +96,7 @@ public class Chat implements javax.jms.MessageListener {
             writeMessageInTopicAll(text);
         } else {
             String receiverName = text.substring(0, text.indexOf(' '));
-            writeMessageInQueue(receiverName, text);
+            writeMessageInQueue(receiverName, text.substring(receiverName.length() + 1));
         }
     }
 
@@ -94,8 +106,19 @@ public class Chat implements javax.jms.MessageListener {
         topicPublisher.publish(message);
     }
 
-    private void writeMessageInQueue(String queue, String text) {
-        System.out.println("отправка сообдещия '" + text + "' в очередь '" + queue + "'");
+    private void writeMessageInQueue(String queue, String text) throws JMSException {
+        System.out.println("отправка сообщения '" + text + "' в очередь '" + queue + "'");
+
+        Queue q = null;
+        try {
+            q = (Queue) context.lookup(queue);
+        } catch (NamingException ignore) {}
+
+        TextMessage message = queueSession.createTextMessage();
+        message.setText(username + ": " + text);
+
+        QueueSender queueSender = queueSession.createSender(q);
+        queueSender.send(message);
     }
 
     /* Close the JMS Connection */
@@ -109,6 +132,7 @@ public class Chat implements javax.jms.MessageListener {
         try {
             if (args.length != 1) {
                 System.out.println("username missing");
+                System.exit(1);
             }
 
             String username = args[0];
@@ -118,7 +142,6 @@ public class Chat implements javax.jms.MessageListener {
 
             // Read from command line
             BufferedReader commandLine = new BufferedReader(new InputStreamReader(System.in));
-
 
             // Loop until the word "exit" is typed
             while (true) {
