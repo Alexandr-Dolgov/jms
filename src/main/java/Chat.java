@@ -15,15 +15,36 @@ public class Chat implements javax.jms.MessageListener {
     private QueueConnection queueConnection;
     private QueueSession queueSession;
 
+    private boolean queueExistInJndiProperties(String queueName) {
+        boolean queueFound = false;
+        try(BufferedReader in = new BufferedReader(new FileReader("jndi.properties"))) {
+            String s;
+            while ((s = in.readLine()) != null) {
+                if (s.equals("queue." + queueName + " = " + queueName)) {
+                    queueFound = true;
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return queueFound;
+    }
+
+    private void addQueueInJndiProperties(String queueName) {
+        try(BufferedWriter out = new BufferedWriter(new FileWriter("jndi.properties", true))) {
+            out.append("\nqueue." + queueName + " = " + queueName);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     /* Constructor used to Initialize Chat */
     public Chat(String username) throws Exception {
 
-        /*
-        //todo
-        в файле jndi.properties ищем строчку
-        queue.$username = $username
-        если не находим, то добавляем в конец
-         */
+        boolean queueFound = queueExistInJndiProperties(username);
+        if (!queueFound) {
+            addQueueInJndiProperties(username);
+        }
 
         // Obtain a JNDI topicConnection using the jndi.properties file
         Context context = new InitialContext();
